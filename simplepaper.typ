@@ -1,4 +1,8 @@
 // aided by Gemini-2.5-Pro-DeepResearch
+// for typst 0.13.1 (8ace67d9).
+
+#let equation-counter = counter("chapter-equations")
+
 #let project(
   title: "",
   authors: (),
@@ -35,9 +39,9 @@
   set text(font: body-font, lang: "zh", region: "cn")
   set bibliography(style: "gb-7714-2015-numeric")
 
-  // --- 段落设置：核心修复 ---
-  // 使用 (amount:..., all: true) 来为所有段落（包括块级元素后的第一个段落）
-  // 应用首行缩进，这是现代 Typst 的惯用做法。
+  // use first-line-indent -> all (typst PR #5768)
+  // instead of blank_par (old method)
+  // to avoid introducing weird line spacing
   set par(
     first-line-indent: (amount: 2em, all: true),
     justify: true,
@@ -51,23 +55,27 @@
     #h(0.75em)
     #it.body
   ]
-  show heading.where(level: 1): it => box(width: 100%)[
-    #set par(first-line-indent: 0em)
-    #v(0.5em)
-    #set align(center)
-    #set heading(numbering: "一")
-    #it
-    #v(0.75em)
-  ]
+  show heading.where(level: 1): it => {
+    equation-counter.update(1)
+    box(width: 100%)[
+      #set par(first-line-indent: 0em)
+      #v(0.5em)
+      #set align(center)
+      #set heading(numbering: "一")
+      #it
+      #v(0.75em)
+    ]
+  }
 
-  set enum(indent: 2em)
+
+  set enum(indent: 2em, numbering: "1.i.a.")
   set list(indent: 2em)
 
   show figure: it => [
-    #v(12pt)
+    #v(2pt)
     #set text(font: caption-font)
     #it
-    #v(12pt)
+    #v(2pt)
   ]
 
   show strong: set text(font: strong-font)
@@ -90,7 +98,6 @@
       it,
     )
   }
-
 
   align(center)[
     #block(text(font: title-font, weight: "bold", 1.75em, title))
@@ -134,6 +141,18 @@
   body
 }
 
+#let numbered_eq(body) = {
+  math.equation(
+    numbering: it => {
+      let chap_num = counter(heading).get().first()
+      equation-counter.step()
+      let eq_num = equation-counter.get().last()
+      numbering("(1.1)", chap_num, eq_num)
+    },
+    block: true,
+    body,
+  )
+}
 
 #let problem-counter = counter("problem")
 #let problem(body) = block(
