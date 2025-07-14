@@ -159,72 +159,82 @@
 #let _b = text.with(fill: blue)
 #let _a = text.with(fill: gray)
 
-#let problem-counter = counter("problem")
-#let problem(body) = block(
-  fill: rgb(241, 241, 255),
-  inset: 8pt,
+#let themed-block(
+  body,
+  title: "",
+  fill: luma(240),
+  stroke: none,
   radius: 2pt,
-  width: 100%,
-)[
-  #problem-counter.step()
-  *题目 #context problem-counter.display().*
-  #h(0.75em)
-  #body
-]
+  inset: 8pt,
+  counter: none,
+) = {
+  if counter != none {
+    counter.step()
+  }
+  block(
+    fill: fill,
+    stroke: stroke,
+    radius: radius,
+    inset: inset,
+    width: 100%,
+  )[
+    #if title != "" or counter != none {
+      if title != "" { title }
+      if counter != none {
+        h(0.3em)
+        strong(context counter.display())
+      }
+      h(0.75em)
+    }
+    #body
+  ]
+}
+
+#let problem-counter = counter("problem")
+#let problem(body) = themed-block(
+  title: strong("题目"),
+  fill: rgb(241, 241, 255),
+  counter: problem-counter,
+  body,
+)
 
 #let solution(body) = {
-  set enum(numbering: "(1)")
+  set enum(numbering: "1)i)a)")
   block(
     inset: 8pt,
     width: 100%,
   )[*解答.* #h(0.75em) #body]
 }
 
-#let themed-block(
-  title,
+#let note(body) = themed-block(
+  title: strong("注"),
+  fill: rgb(232, 244, 253),
   body,
-  color: luma(200),
-  counter-obj: none,
-  ..styling,
-) = {
-  block(
-    fill: color,
-    inset: 8pt,
-    radius: 2pt,
-    width: 100%,
-    ..styling,
-  )[
-    #if counter-obj != none {
-      counter-obj.step()
-      strong(title + " " + counter-obj.display())
-    } else {
-      strong(title)
-    }
-    #h(0.75em)
-    #body
-  ]
-}
+)
 
-#let definition-counter = counter("definition")
+#let warning(body) = themed-block(
+  title: strong("注意"),
+  fill: rgb(255, 243, 230),
+  stroke: 1pt + rgb(255, 180, 120),
+  body,
+)
+
+#let tip(body) = themed-block(
+  title: strong("提示"),
+  fill: rgb(237, 253, 232),
+  body,
+)
+
+#let example(body) = themed-block(
+  title: strong("例"),
+  fill: luma(245),
+  body,
+)
+
 #let theorem-counter = counter("theorem")
-#let example-counter = counter("example")
-
-#let definition = themed-block.with(
-  title: "定义",
-  color: blue.lighten(80%),
-  counter-obj: definition-counter,
+#let theorem(body) = themed-block(
+  title: strong("定理"),
+  fill: rgb("#39c5bc32"),
+  counter: theorem-counter,
+  body,
 )
-
-#let theorem = themed-block.with(
-  title: "定理",
-  color: green.lighten(80%),
-  counter-obj: theorem-counter,
-)
-
-#let example = themed-block.with(
-  title: "例",
-  color: eastern.lighten(80%),
-  counter-obj: example-counter,
-)
-
-#let note = themed-block.with(title: "注", color: gray.lighten(80%))
