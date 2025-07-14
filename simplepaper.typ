@@ -154,6 +154,11 @@
   )
 }
 
+#let _r = text.with(fill: red)
+#let _g = text.with(fill: green)
+#let _b = text.with(fill: blue)
+#let _a = text.with(fill: gray)
+
 #let problem-counter = counter("problem")
 #let problem(body) = block(
   fill: rgb(241, 241, 255),
@@ -174,3 +179,52 @@
     width: 100%,
   )[*解答.* #h(0.75em) #body]
 }
+
+#let themed-block(
+  title,
+  body,
+  color: luma(200),
+  counter-obj: none,
+  ..styling,
+) = {
+  block(
+    fill: color,
+    inset: 8pt,
+    radius: 2pt,
+    width: 100%,
+    ..styling,
+  )[
+    #if counter-obj != none {
+      counter-obj.step()
+      strong(title + " " + counter-obj.display())
+    } else {
+      strong(title)
+    }
+    #h(0.75em)
+    #body
+  ]
+}
+
+#let definition-counter = counter("definition")
+#let theorem-counter = counter("theorem")
+#let example-counter = counter("example")
+
+#let definition = themed-block.with(
+  title: "定义",
+  color: blue.lighten(80%),
+  counter-obj: definition-counter,
+)
+
+#let theorem = themed-block.with(
+  title: "定理",
+  color: green.lighten(80%),
+  counter-obj: theorem-counter,
+)
+
+#let example = themed-block.with(
+  title: "例",
+  color: eastern.lighten(80%),
+  counter-obj: example-counter,
+)
+
+#let note = themed-block.with(title: "注", color: gray.lighten(80%))
