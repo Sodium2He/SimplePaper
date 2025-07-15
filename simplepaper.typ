@@ -157,12 +157,41 @@
 #let _r = text.with(fill: red)
 #let _g = text.with(fill: green)
 #let _b = text.with(fill: blue)
+#let _y = text.with(fill: yellow)
 #let _a = text.with(fill: gray)
+#let _ry = text.with(fill: orange)
+
+// https://github.com/typst/typst/discussions/4800#discussioncomment-12792630
+// HOW-TO-USE: like table.cell(diagbox()[$x$][$y$], inset: 0pt, breakable: false)
+#let diagbox(text_left, text_right, padding: 5pt, stroke: .4pt, inverted: false) = context {
+  let padded_right = pad(text_right, padding)
+  let padded_left = pad(text_left, padding)
+
+  let measure_right = measure(padded_right)
+  let measure_left = measure(padded_left)
+
+  let width_diff = calc.abs(measure_right.width - measure_left.width)
+
+  let inner_height = measure_right.height + measure_left.height + width_diff / 10
+  let inner_width = measure_right.width + measure_left.width
+
+  box(width: inner_width, height: inner_height) // Empty box to ensure minimal size
+
+  if inverted {
+    place(bottom + right, padded_right)
+    place(top + left, line(start: (0%, 100%), end: (100%, 0%), stroke: stroke))
+    place(top + left, padded_left)
+  } else {
+    place(top + right, padded_right)
+    place(top + left, line(end: (100%, 100%), stroke: stroke))
+    place(bottom + left, padded_left)
+  }
+}
 
 #let themed-block(
   body,
   title: "",
-  fill: luma(240),
+  fill: luma(248),
   stroke: none,
   radius: 2pt,
   inset: 8pt,
@@ -178,6 +207,7 @@
     inset: inset,
     width: 100%,
   )[
+    #set enum(numbering: "1)i)a)")
     #if title != "" or counter != none {
       if title != "" { title }
       if counter != none {
@@ -206,9 +236,11 @@
   )[*解答.* #h(0.75em) #body]
 }
 
+#let normal = themed-block
+
 #let note(body) = themed-block(
   title: strong("注"),
-  fill: rgb(232, 244, 253),
+  fill: rgb("#fffef3"),
   body,
 )
 
@@ -227,14 +259,14 @@
 
 #let example(body) = themed-block(
   title: strong("例"),
-  fill: luma(245),
+  fill: rgb("#f1f9ff"),
   body,
 )
 
 #let theorem-counter = counter("theorem")
 #let theorem(body) = themed-block(
   title: strong("定理"),
-  fill: rgb("#39c5bc32"),
+  fill: rgb("#39c5bc12"),
   counter: theorem-counter,
   body,
 )
