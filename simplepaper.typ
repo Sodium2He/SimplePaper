@@ -2,6 +2,7 @@
 // for typst 0.13.1 (8ace67d9).
 
 #let equation-counter = counter("chapter-equations")
+#let appendix-mode = state("appendix-mode", false)
 
 #let project(
   title: "",
@@ -57,15 +58,33 @@
   ]
   show heading.where(level: 1): it => {
     equation-counter.update(1)
-    box(width: 100%)[
-      #set par(first-line-indent: 0em)
-      #v(0.5em)
-      #set align(center)
-      #set heading(numbering: "一")
-      #it
-      #v(0.75em)
-    ]
+    context if appendix-mode.get() {
+      box(width: 100%)[
+        #set par(first-line-indent: 0em)
+        #v(0.5em)
+        #set align(center)
+        #set heading(numbering: "附录" + "A")
+        #it
+        #v(0.75em)
+      ]
+    } else {
+      box(width: 100%)[
+        #set par(first-line-indent: 0em)
+        #v(0.5em)
+        #set align(center)
+        #set heading(numbering: "一")
+        #it
+        #v(0.75em)
+      ]
+    }
   }
+
+  // https://forum.typst.app/t/how-to-change-numbering-in-appendix/1716/6
+  set figure(numbering: n => {
+    let hdr = counter(heading).get().first()
+    let num = query(selector(heading).before(here())).last().numbering
+    numbering(num, hdr, n)
+  })
 
 
   set enum(indent: 2em, numbering: "1.i.a.")
@@ -141,6 +160,15 @@
   body
 }
 
+// turn on appendix mode: #show: appendix
+#let appendix(body) = {
+  appendix-mode.update(true)
+  set heading(numbering: "A.1.1", supplement: [Appendix])
+  counter(heading).update(0)
+  equation-counter.update(0)
+  body
+}
+
 #let numbered_eq(body) = {
   math.equation(
     numbering: it => {
@@ -163,6 +191,7 @@
 
 // https://github.com/typst/typst/discussions/4800#discussioncomment-12792630
 // HOW-TO-USE: like table.cell(diagbox()[$x$][$y$], inset: 0pt, breakable: false)
+// if package typst-diagbox: https://github.com/PgBiel/typst-diagbox resumes updating, diagbox funciton here should be removed
 #let diagbox(text_left, text_right, padding: 5pt, stroke: .4pt, inverted: false) = context {
   let padded_right = pad(text_right, padding)
   let padded_left = pad(text_left, padding)
