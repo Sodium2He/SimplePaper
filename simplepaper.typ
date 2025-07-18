@@ -2,6 +2,7 @@
 // for typst 0.13.1 (8ace67d9).
 
 #let equation-counter = counter("chapter-equations")
+#let figure-counter = counter("chapter-figures")
 #let appendix-mode = state("appendix-mode", false)
 
 #let project(
@@ -79,12 +80,19 @@
     }
   }
 
-  // https://forum.typst.app/t/how-to-change-numbering-in-appendix/1716/6
-  set figure(numbering: n => {
-    let hdr = counter(heading).get().first()
-    let num = query(selector(heading).before(here())).last().numbering
-    numbering(num, hdr, n)
-  })
+  // try this instead of using codes below:
+  // #import "@preview/i-figured:0.2.4"
+  // #show heading: i-figured.reset-counters
+  // #show figure: i-figured.show-figure
+  // // #show math.equation: i-figured.show-equation
+  // // #i-figured.outline()
+  // notice: also see block [#let appendix] and [#let numbered_eq]!
+  // for more information: https://forum.typst.app/t/how-to-change-numbering-in-appendix/1716/6
+  //  set figure(numbering: n => {
+  //    let hdr = counter(heading).get().first()
+  //    let num = query(selector(heading).before(here())).last().numbering
+  //    numbering(num, hdr, n)
+  //  })
 
 
   set enum(indent: 2em, numbering: "1.i.a.")
@@ -169,13 +177,17 @@
   body
 }
 
+// ////////  !IMPORTANT!  ////////
+// you should add [#show figure: i-figured.show-figure.with(numbering: "A.1", level: 1,)] after [#show: appendix] to fix numbered_eq numbering!
 #let numbered_eq(body) = {
   math.equation(
     numbering: it => {
-      let chap_num = counter(heading).get().first()
-      equation-counter.step()
-      let eq_num = equation-counter.get().last()
-      numbering("(1.1)", chap_num, eq_num)
+      context {
+        let chap_num = counter(heading).get().first()
+        equation-counter.step()
+        let eq_num = equation-counter.get().last()
+        numbering(if appendix-mode.get() { "(A.1)" } else { "(1.1)" }, chap_num, eq_num)
+      }
     },
     block: true,
     body,
