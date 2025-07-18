@@ -86,6 +86,8 @@
   // #show figure: i-figured.show-figure
   // // #show math.equation: i-figured.show-equation
   // // #i-figured.outline()
+  // // ////////  !IMPORTANT!  ////////
+  // you should add [#show figure: i-figured.show-figure.with(numbering: "A.1", level: 1,)] after [#show: appendix] to fix numbered_eq numbering!
   // notice: also see block [#let appendix] and [#let numbered_eq]!
   // for more information: https://forum.typst.app/t/how-to-change-numbering-in-appendix/1716/6
   //  set figure(numbering: n => {
@@ -177,8 +179,6 @@
   body
 }
 
-// ////////  !IMPORTANT!  ////////
-// you should add [#show figure: i-figured.show-figure.with(numbering: "A.1", level: 1,)] after [#show: appendix] to fix numbered_eq numbering!
 #let numbered_eq(body) = {
   math.equation(
     numbering: it => {
