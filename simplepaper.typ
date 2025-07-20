@@ -58,6 +58,7 @@
     #it.body
   ]
   show heading.where(level: 1): it => {
+    pagebreak(to: "odd")
     equation-counter.update(1)
     context if appendix-mode.get() {
       box(width: 100%)[
@@ -179,19 +180,24 @@
   body
 }
 
-#let numbered_eq(body) = {
-  math.equation(
+#let numbered_eq(body, label: none) = {
+  let eq = math.equation(
     numbering: it => {
-      context {
-        let chap_num = counter(heading).get().first()
-        equation-counter.step()
-        let eq_num = equation-counter.get().last()
-        numbering(if appendix-mode.get() { "(A.1)" } else { "(1.1)" }, chap_num, eq_num)
-      }
+      let chap_num = counter(heading).get().first()
+      equation-counter.step()
+      let eq_num = equation-counter.get().last()
+      numbering(if appendix-mode.get() { "(A.1)" } else { "(1.1)" }, chap_num, eq_num)
     },
     block: true,
     body,
   )
+  // don't know why, but it works
+  // no need to write like n...q($...$, <...>), n...q($...$)<...> is also ok
+  if label != none {
+    [#eq #label]
+  } else {
+    eq
+  }
 }
 
 #let _r = text.with(fill: red)
@@ -200,6 +206,9 @@
 #let _y = text.with(fill: yellow)
 #let _a = text.with(fill: gray)
 #let _ry = text.with(fill: orange)
+#let bf(content) = math.upright(math.bold(content))
+#let aka = math.eq.delta
+// fuchsia teal eastern purple maroon aqua navy
 
 // https://github.com/typst/typst/discussions/4800#discussioncomment-12792630
 // HOW-TO-USE: like table.cell(diagbox()[$x$][$y$], inset: 0pt, breakable: false)
@@ -232,7 +241,7 @@
 #let themed-block(
   body,
   title: "",
-  fill: luma(248),
+  fill: luma(0%, 4%),
   stroke: none,
   radius: 2pt,
   inset: 8pt,
