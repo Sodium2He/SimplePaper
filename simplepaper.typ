@@ -1,4 +1,4 @@
-// aided by Gemini-2.5-Pro-DeepResearch
+// aided by Claude Soonet 4 & Gemini-2.5-Pro-DeepResearch
 // for typst 0.13.1 (8ace67d9).
 
 #let equation-counter = counter("chapter-equations")
@@ -33,10 +33,65 @@
   let raw-font = (en_code, ..zh_hei)
 
   set document(author: authors.map(author => author.name), title: title)
-  set page(numbering: "1", number-align: center, header: align(left)[
-    #set text(font: header-font)
-    #title
-  ])
+  set page(numbering: "1", number-align: center, header: context {
+    let page-num = here().page()
+    let headings = query(selector(heading).before(here()))
+    let is-appendix = appendix-mode.get()
+
+    // 检查当前页是否有一级标题
+    let current-page-headings = query(selector(heading).after(here())).filter(h => h.location().page() == page-num)
+    let has-chapter-on-page = current-page-headings.any(h => h.level == 1)
+
+    // 如果当前页有章节标题或者是第一页（标题页），则不显示页眉
+    if has-chapter-on-page or page-num == 1 {
+      none
+    } else if headings.len() > 0 {
+      let current-chapter = headings.filter(h => h.level == 1).last()
+      let current-section = headings.filter(h => h.level == 2).last()
+
+      if calc.even(page-num) {
+        // 偶数页：页数 | 第X章/附录X 章节名
+        align(left)[
+          #set text(font: header-font)
+          #page-num | #{
+            if is-appendix {
+              let appendix-letter = numbering("A", counter(heading).at(current-chapter.location()).first())
+              "附录" + appendix-letter + " " + current-chapter.body
+            } else {
+              "第" + str(counter(heading).at(current-chapter.location()).first()) + "章 " + current-chapter.body
+            }
+          }
+        ]
+      } else {
+        // 奇数页：章节号 小节标题 | 页数
+        align(right)[
+          #set text(font: header-font)
+          #{
+            if current-section != none {
+              let section-nums = counter(heading).at(current-section.location())
+              if is-appendix { numbering("A.1", ..section-nums) + " " + current-section.body } else {
+                numbering("1.1", ..section-nums) + " " + current-section.body
+              }
+            } else {
+              if is-appendix {
+                let appendix-letter = numbering("A", counter(heading).at(current-chapter.location()).first())
+                "附录" + appendix-letter + " " + current-chapter.body
+              } else {
+                let chapter-num = counter(heading).at(current-chapter.location()).first()
+                numbering("1", chapter-num) + " " + current-chapter.body
+              }
+            }
+          } | #page-num
+        ]
+      }
+    } else {
+      // 没有标题时的默认页眉
+      align(center)[
+        #set text(font: header-font)
+        #title
+      ]
+    }
+  })
   set heading(numbering: "1.1")
   set text(font: body-font, lang: "zh", region: "cn")
   set bibliography(style: "gb-7714-2015-numeric")
@@ -200,6 +255,7 @@
   }
 }
 
+// fuchsia teal eastern purple maroon aqua navy
 #let _r = text.with(fill: red)
 #let _g = text.with(fill: green)
 #let _b = text.with(fill: blue)
@@ -208,7 +264,9 @@
 #let _ry = text.with(fill: orange)
 #let bf(content) = math.upright(math.bold(content))
 #let aka = math.eq.delta
-// fuchsia teal eastern purple maroon aqua navy
+#let vt(content) = math.arrow(content)
+#let detm(..args) = math.mat(delim: "|", ..args)
+// you need to use like: detm(row-gap: #8pt, ...)
 
 // https://github.com/typst/typst/discussions/4800#discussioncomment-12792630
 // HOW-TO-USE: like table.cell(diagbox()[$x$][$y$], inset: 0pt, breakable: false)
