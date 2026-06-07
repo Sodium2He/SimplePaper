@@ -1,9 +1,47 @@
 // aided by Claude Soonet 4 & Gemini-2.5-Pro-DeepResearch
 // for typst 0.13.1 (8ace67d9).
 
+// #set math.vec(delim: "[")
+// #set math.mat(delim: "[")
+
+#let Var = math.op("Var")
+#let Cov = math.op("Cov")
+#let Corr = math.op("Corr")
+#let asinh = math.op("asinh") // not recommended to use
+#let mathrm(x) = math.upright(x)
+#let mathbf(x) = math.bold(math.upright(x))
+#let pi = math.upright(sym.pi)
+#let half-relation = {
+  let width = 0.95em
+  let row-height = 0.5em
+  let row-gap = -0.34em
+  math.class(
+    "relation",
+    box(width: width)[
+      #stack(
+        dir: ttb,
+        spacing: row-gap,
+        box(width: width, height: row-height)[
+          #place(center + horizon)[$harpoon.rt$]
+        ],
+        box(width: width, height: row-height)[
+          #place(center + horizon)[$harpoon.lb$]
+          #place(center + horizon, dx: 0.08em, dy: 0.18em)[
+            #box(width: 0.2em, height: 0.18em, clip: true)[
+              #move(dx: -0.09em, dy: -0.08em)[$thin \\$]
+            ]
+          ]
+        ],
+      )
+    ],
+  )
+}
+
+
 #let equation-counter = counter("chapter-equations")
 #let figure-counter = counter("chapter-figures")
 #let appendix-mode = state("appendix-mode", false)
+#let math-mode-dot = state("math-mode", false)
 
 #let project(
   title: "",
@@ -17,8 +55,8 @@
   let zh_kai = ("FZKai-Z03", "FZKai-Z03S")
   let zh_hei = ("FZHei-B01", "FZHei-B01S")
   let zh_fangsong = ("FZFangSong-Z02", "FZFangSong-Z02S")
-  let en_sans_serif = "CMU Sans Serif"
-  let en_serif = "CMU Serif"
+  let en_sans_serif = "Libertinus Sans" //"CMU Sans Serif"
+  let en_serif = "Libertinus Serif" //"CMU Serif"
   let en_typewriter = "Consolas"
   let en_code = "Consolas"
 
@@ -38,6 +76,8 @@
     let headings = query(selector(heading).before(here()))
     let is-appendix = appendix-mode.get()
 
+    let first_or_none(arr) = if arr.len() > 0 { arr.first() } else { none }
+
     // 检查当前页是否有一级标题
     let current-page-headings = query(selector(heading).after(here())).filter(h => h.location().page() == page-num)
     let has-chapter-on-page = current-page-headings.any(h => h.level == 1)
@@ -46,19 +86,27 @@
     if has-chapter-on-page or page-num == 1 {
       none
     } else if headings.len() > 0 {
-      let current-chapter = headings.filter(h => h.level == 1).last()
-      let current-section = headings.filter(h => h.level == 2).last()
+      // 目录页等场景里，最近的一级标题可能是“无编号标题”（常见于 #outline() 前后的“目录”）
+      // 这会导致 counter(heading).at(...).first() 取到空数组而报错。
+      let numbered-chapters = headings.filter(h => h.level == 1 and h.numbering != none)
+      let numbered-sections = headings.filter(h => h.level == 2 and h.numbering != none)
+      let current-chapter = if numbered-chapters.len() > 0 { numbered-chapters.last() } else { none }
+      let current-section = if numbered-sections.len() > 0 { numbered-sections.last() } else { none }
 
       if calc.even(page-num) {
         // 偶数页：页数 | 第X章/附录X 章节名
         align(left)[
           #set text(font: header-font)
           #page-num | #{
-            if is-appendix {
-              let appendix-letter = numbering("A", counter(heading).at(current-chapter.location()).first())
-              "附录" + appendix-letter + " " + current-chapter.body
+            if current-chapter == none { title } else if is-appendix {
+              let chapter-num = first_or_none(counter(heading).at(current-chapter.location()))
+              if chapter-num == none { title } else {
+                let appendix-letter = numbering("A", chapter-num)
+                "附录" + appendix-letter + " " + current-chapter.body
+              }
             } else {
-              "第" + str(counter(heading).at(current-chapter.location()).first()) + "章 " + current-chapter.body
+              let chapter-num = first_or_none(counter(heading).at(current-chapter.location()))
+              if chapter-num == none { title } else { "第" + str(chapter-num) + "章 " + current-chapter.body }
             }
           }
         ]
@@ -73,12 +121,15 @@
                 numbering("1.1", ..section-nums) + " " + current-section.body
               }
             } else {
-              if is-appendix {
-                let appendix-letter = numbering("A", counter(heading).at(current-chapter.location()).first())
-                "附录" + appendix-letter + " " + current-chapter.body
+              if current-chapter == none { title } else if is-appendix {
+                let chapter-num = first_or_none(counter(heading).at(current-chapter.location()))
+                if chapter-num == none { title } else {
+                  let appendix-letter = numbering("A", chapter-num)
+                  "附录" + appendix-letter + " " + current-chapter.body
+                }
               } else {
-                let chapter-num = counter(heading).at(current-chapter.location()).first()
-                numbering("1", chapter-num) + " " + current-chapter.body
+                let chapter-num = first_or_none(counter(heading).at(current-chapter.location()))
+                if chapter-num == none { title } else { numbering("1", chapter-num) + " " + current-chapter.body }
               }
             }
           } | #page-num
@@ -103,6 +154,15 @@
     first-line-indent: (amount: 2em, all: true),
     justify: true,
   )
+
+  // Math Font
+  show math.equation: set text(
+    font: (
+      "Libertinus Math"
+    ),
+  )
+
+  show math.equation: set block(breakable: true)
 
   show heading: it => box(width: 100%)[
     #set par(first-line-indent: 0em)
@@ -151,6 +211,9 @@
   //    let num = query(selector(heading).before(here())).last().numbering
   //    numbering(num, hdr, n)
   //  })
+
+
+  show "。": it => context if math-mode-dot.get() { [．] } else { it }
 
 
   set enum(indent: 2em, numbering: "1.i.a.")
@@ -344,6 +407,7 @@
   )[*解答.* #h(0.75em) #body]
 }
 
+// how to use: (title: strong("XX"))
 #let normal = themed-block
 
 #let note(body) = themed-block(
