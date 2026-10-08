@@ -1,5 +1,37 @@
 // aided by Claude Soonet 4 & Gemini-2.5-Pro-DeepResearch
-// for typst 0.13.1 (8ace67d9).
+//          & GPT 5.6, etc.
+// for typst (?)
+// forked from jinhao-huang / SimplePaper
+//
+
+/* LICENSE
+
+MIT License
+
+Copyright (c) 2024 1bitbool
+
+Copyright (c) 2026 Sodium2He(Na2He)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
 
 // #set math.vec(delim: "[")
 // #set math.mat(delim: "[")
@@ -8,6 +40,8 @@
 #let Cov = math.op("Cov")
 #let Corr = math.op("Corr")
 #let asinh = math.op("asinh") // not recommended to use
+#let erf = math.op("erf") // erf removed in physica 0.9.8
+
 #let mathrm(x) = math.upright(x)
 #let mathbf(x) = math.bold(math.upright(x))
 #let pi = math.upright(sym.pi)
@@ -212,9 +246,7 @@
   //    numbering(num, hdr, n)
   //  })
 
-
   show "。": it => context if math-mode-dot.get() { [．] } else { it }
-
 
   set enum(indent: 2em, numbering: "1.i.a.")
   set list(indent: 2em)
@@ -236,7 +268,6 @@
     underline(it)
   }
 
-
   show raw: set text(font: raw-font)
   show raw.where(block: true): it => {
     block(
@@ -251,7 +282,6 @@
     #block(text(font: title-font, weight: "bold", 1.75em, title))
     #v(0.5em)
   ]
-
 
   for i in range(calc.ceil(authors.len() / 3)) {
     let end = calc.min((i + 1) * 3, authors.len())
